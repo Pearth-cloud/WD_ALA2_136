@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Advanced Bouncing Ball Game</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #111;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      background: #000;
+    }
+    .controls, .info {
+      position: absolute;
+      z-index: 10;
+      color: white;
+    }
+    .controls {
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: grid;
+      grid-template-columns: 60px 60px 60px;
+      grid-template-rows: 60px 60px;
+      gap: 10px;
+    }
+    .btn {
+      width: 60px;
+      height: 60px;
+      font-size: 24px;
+      border: none;
+      border-radius: 10px;
+      background: #333;
+      color: #fff;
+      cursor: pointer;
+    }
+    .up { grid-column: 2; }
+    .left { grid-column: 1; grid-row: 2; }
+    .down { grid-column: 2; grid-row: 2; }
+    .right { grid-column: 3; grid-row: 2; }
+    .info {
+      top: 10px;
+      left: 20px;
+      font-size: 18px;
+    }
+    .game-over {
+      position: absolute;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: red;
+      font-size: 36px;
+      font-weight: bold;
+      z-index: 20;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="gameCanvas"></canvas>
+
+<div class="info">
+  <div>Score: <span id="score">0</span></div>
+  <div>Time Left: <span id="timer">30</span> sec</div>
+</div>
+
+<div class="controls">
+  <button class="btn up">↑</button>
+  <button class="btn left">←</button>
+  <button class="btn down">↓</button>
+  <button class="btn right">→</button>
+</div>
+
+<div class="game-over" id="gameOver">💀 Game Over</div>
+
+<script>
+  const canvas = document.getElementById("gameCanvas");
+  const ctx = canvas.getContext("2d");
+
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  let x = canvas.width / 2, y = canvas.height / 2;
+  const radius = 20;
+  let dx = 3, dy = 3;
+  let color = "white";
+  let score = 0;
+  let timeLeft = 30;
+  let isGameOver = false;
+
+  const scoreDisplay = document.getElementById("score");
+  const timerDisplay = document.getElementById("timer");
+  const gameOverText = document.getElementById("gameOver");
+
+  const enemies = [
+    { x: 100, y: 100, w: 80, h: 80, dx: 2, dy: 2 },
+    { x: 600, y: 300, w: 100, h: 100, dx: -3, dy: 2 },
+    { x: canvas.width - 200, y: canvas.height - 200, w: 90, h: 90, dx: 3, dy: -2 },
+  ];
+
+  function drawBall() {
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.closePath();
+  }
+
+  function drawEnemies() {
+    enemies.forEach(e => {
+      ctx.fillStyle = "red";
+      ctx.fillRect(e.x, e.y, e.w, e.h);
+    });
+  }
+
+  function updateEnemies() {
+    enemies.forEach(e => {
+      e.x += e.dx;
+      e.y += e.dy;
+      if (e.x < 0 || e.x + e.w > canvas.width) e.dx *= -1;
+      if (e.y < 0 || e.y + e.h > canvas.height) e.dy *= -1;
+    });
+  }
+
+  function isColliding(rect) {
+    return (
+      x + radius > rect.x &&
+      x - radius < rect.x + rect.w &&
+      y + radius > rect.y &&
+      y - radius < rect.y + rect.h
+    );
+  }
+
+  function endGame(message) {
+    isGameOver = true;
+    gameOverText.textContent = message;
+    gameOverText.style.display = "block";
+  }
+
+  function animate() {
+    if (isGameOver) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    drawBall();
+    drawEnemies();
+    updateEnemies();
+
+    // Wall bounce
+    if (x + radius > canvas.width || x - radius < 0) dx = -dx;
+    if (y + radius > canvas.height || y - radius < 0) dy = -dy;
+
+    // Collision with enemies
+    for (const e of enemies) {
+      if (isColliding(e)) {
+        endGame("💥 You hit an enemy!");
+        return;
+      }
+    }
+
+    x += dx;
+    y += dy;
+
+    requestAnimationFrame(animate);
+  }
+
+  function countdown() {
+    if (isGameOver) return;
+    timeLeft--;
+    score++;
+    timerDisplay.textContent = timeLeft;
+    scoreDisplay.textContent = score;
+
+    if (timeLeft <= 0) {
+      endGame("🏆 You Win!");
+    } else {
+      setTimeout(countdown, 1000);
+    }
+  }
+
+  // Controls
+  document.querySelector(".up").addEventListener("click", () => { dx = 0; dy = -5; });
+  document.querySelector(".down").addEventListener("click", () => { dx = 0; dy = 5; });
+  document.querySelector(".left").addEventListener("click", () => { dx = -5; dy = 0; });
+  document.querySelector(".right").addEventListener("click", () => { dx = 5; dy = 0; });
+
+  window.addEventListener("resize", () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  });
+
+  animate();
+  countdown();
+</script>
+
+</body>
+</html>

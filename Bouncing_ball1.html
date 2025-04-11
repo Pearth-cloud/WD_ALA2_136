@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bouncing Ball Animation</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #111;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    // Fullscreen canvas
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    // Ball properties
+    let x = canvas.width / 2;
+    let y = canvas.height / 2;
+    let radius = 30;
+    let dx = 4;
+    let dy = 4;
+    let color = getRandomColor();
+
+    function getRandomColor() {
+      return `hsl(${Math.random() * 360}, 80%, 60%)`;
+    }
+
+    function drawBall() {
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.closePath();
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      drawBall();
+
+      // Bounce off walls
+      if (x + radius > canvas.width || x - radius < 0) {
+        dx = -dx;
+        color = getRandomColor();
+      }
+
+      if (y + radius > canvas.height || y - radius < 0) {
+        dy = -dy;
+        color = getRandomColor();
+      }
+
+      x += dx;
+      y += dy;
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+
+    // Optional: Update canvas size when window resizes
+    window.addEventListener("resize", () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+  </script>
+</body>
+</html>
